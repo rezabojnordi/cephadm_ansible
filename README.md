@@ -1,11 +1,15 @@
 # cephadm_ansible
 
+
 ### Cephadm Ansible Project
 
 * This project aims to automate the installation and configuration of a Ceph storage cluster using Ansible. The playbook is designed to perform the following tasks:
 
 ![Cephadm Ansible](./img/network.png)
 ![Cephadm Ansible](./img/network2.png)
+
+
+
 
 * 1. Check if the ceph.conf file already exists on the mon1 host.
 * 2. Create a new ceph.conf file with specific configurations for the Ceph cluster.
@@ -30,6 +34,42 @@ The `playbook.yml` file contains the main Ansible playbook with the tasks to be 
 
 ## How to Run the Playbook
 To run the playbook, execute the following command:
+
+* Note: don't forget to change variable
+
+```
+---
+# defaults file for cephadm_ansible
+docker_enabled: true
+podman_enabled: false
+
+
+## bootstrap
+bootstrap_manager: true
+
+## mon1
+mon1: ""172.16.112.110"
+
+## one interface
+mon_ip: "172.16.112.110"
+
+## cluster network
+public_network: "172.16.112.0/22"
+cluster_network: "172.20.104.0/24"
+
+## adding mon
+mon_hosts:
+  - mon2
+  - mon3
+
+## adding OSD
+ceph_hosts:
+  - ceph1
+  - ceph2
+  - ceph3
+
+```
+
 
 ```bash
 
