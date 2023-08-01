@@ -1,0 +1,34 @@
+---
+- name: Add MON hosts to Ceph Orchestrator
+  delegate_to: "{{mon1}}"
+  command: cephadm shell -- ceph orch host add {{ item }}
+  loop: "{{ mon_hosts }}"
+  tags:
+    - adding_mon
+
+- name: Apply mon --unmanaged
+  delegate_to: "{{mon1}}"
+  command: cephadm shell -- ceph orch apply mon --unmanaged
+  tags:
+    - adding_mon
+
+- name: Add Lable for the Mon
+  delegate_to: "{{mon1}}"
+  command: cephadm shell -- ceph orch host label add  {{ item }} mon
+  loop: "{{ mon_hosts }}"
+  tags:
+    - adding_mon
+
+- name: Apply MON role to hosts
+  delegate_to: "{{mon1}}"
+  shell: ceph orch apply mon 3
+  tags:
+    - adding_mon
+
+- name: Apply MON role to hosts
+  delegate_to: "{{mon1}}"
+  shell: ceph orch apply mon {{ item }}
+  loop: "{{ mon_hosts }}"
+  tags:
+    - adding_mon
+

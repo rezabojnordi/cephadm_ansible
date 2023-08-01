@@ -1,0 +1,139 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  tags:
+    - preinstall
+
+- name: Perform dist-upgrade
+  apt:
+    upgrade: dist
+  tags:
+    - preinstall
+
+- name: Install Docker dependencies
+  when: docker_enabled
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - curl
+    - gnupg2
+    - software-properties-common
+  tags:
+    - preinstall
+
+- name: Install Docker if required
+  when: docker_enabled | default(false)
+  shell: curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
+  tags:
+    - preinstall
+
+- name: Add Podman repository
+  when: podman_enabled
+  apt_repository:
+    repo: "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /"
+    state: present
+  tags:
+    - preinstall
+- name: Import Podman GPG key
+  when: podman_enabled
+  shell: curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key" | apt-key add -
+  tags:
+    - preinstall
+- name: Install Podman if required
+  when: podman_enabled | default(false)
+  apt:
+    name: podman
+    state: present
+  tags:
+    - preinstall
+
+- name: Set timezone to Asia/Tehran
+  command: timedatectl set-timezone Asia/Tehran
+  tags:
+    - preinstall
+
+- name: Modify registries.conf
+  blockinfile:
+    path: /etc/containers/registries.conf
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
+    block: |
+      [registries.search]
+      registries=["registry.access.redhat.com", "registry.fedoraproject.org", "docker.io"]
+  with_items:
+    - { name: "Add registries.search section", state: "present" }
+  tags:
+    - preinstall
+
+- name: Check Podman info
+  command: podman info
+  register: podman_info
+  tags:
+    - preinstall
+
+- name: Display Podman info
+  debug:
+    var: podman_info.stdout_lines
+  tags:
+    - preinstall
+
+
+
+- name: Download cephadm script
+  shell: "curl --silent --remote-name --location https://github.com/ceph/ceph/raw/pacific/src/cephadm/cephadm"
+  args:
+    warn: false
+  tags:
+    - preinstall
+
+- name: Make cephadm script executable
+  shell: chmod +x cephadm
+  tags:
+    - preinstall
+
+- name: Add Ceph repository (pacific release)
+  shell: sudo ./cephadm add-repo --release pacific
+  tags:
+    - preinstall
+
+- name: Download Ceph release.asc key
+  shell: "wget https://download.ceph.com/keys/release.asc"
+  args:
+    warn: false
+  tags:
+    - preinstall
+
+- name: Add Ceph release.asc key
+  shell: sudo apt-key add release.asc
+  tags:
+    - preinstall
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  tags:
+    - preinstall
+
+- name: Install Ceph
+  shell: sudo ./cephadm install
+  tags:
+    - preinstall
+
+- name: Add Ceph repository (pacific release)
+  shell: cephadm add-repo --release pacific
+  tags:
+    - preinstall
+
+- name: Install ceph-common package
+  shell: cephadm install ceph-common
+  tags:
+    - preinstall
+
+- name: Create /etc/ceph directory
+  file:
+    path: /etc/ceph
+    state: directory
+    mode: '0755'
+  tags:
+    - preinstall

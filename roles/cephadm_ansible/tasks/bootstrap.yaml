@@ -1,0 +1,35 @@
+---
+- name: Check if ceph.conf already exists
+  delegate_to: "{{mon1}}"
+  stat:
+    path: /root/ceph.conf
+  register: ceph_conf_stat
+  changed_when: false
+  tags:
+    - bootstrap
+
+- name: Create ceph.conf
+  delegate_to: "{{mon1}}"
+  blockinfile:
+    path: /root/ceph.conf
+    marker: "# {mark} ANSIBLE MANAGED BLOCK"
+    block: |
+      [global]
+      public network = {{ public_network }}
+      cluster network = {{ cluster_network }}
+  when: not ceph_conf_stat.stat.exists or bootstrap_manager | default(false)
+  tags:
+    - bootstrap
+
+- name: Run Ceph bootstrap
+  delegate_to: "{{mon1}}"
+  shell: cephadm bootstrap -c /root/ceph.conf --mon-ip "{{ mon_ip }}"
+  when: bootstrap_manager | default(false)
+  tags:
+    - bootstrap
+
+- name: Copy ceph.pub to remote host
+  delegate_to: "{{mon1}}"
+  command: ssh-copy-id -f -i /etc/ceph/ceph.pub root@{{ inventory_hostname }}
+  tags:
+    - bootstrap

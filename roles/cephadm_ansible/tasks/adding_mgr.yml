@@ -1,0 +1,7 @@
+---
+- name: Add Label for the Mon
+  delegate_to: "{{ mon1 }}"
+  command: cephadm shell -- ceph orch host label add {{ item }} mgr
+  loop: "{{ mon_hosts }}"
+  tags:
+    - adding_mgr

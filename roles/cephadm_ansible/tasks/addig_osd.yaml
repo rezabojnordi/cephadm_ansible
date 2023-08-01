@@ -1,0 +1,26 @@
+---
+- name: Add MON hosts to Ceph Orchestrator
+  delegate_to: "{{ mon1 }}"
+  command: cephadm shell -- ceph orch host add {{ item }}
+  loop: "{{ ceph_hosts }}"
+  tags:
+    - adding_osd
+
+- name: Apply mon --unmanaged
+  delegate_to: "{{ mon1 }}"
+  command: cephadm shell -- ceph orch apply mon --unmanaged
+  tags:
+    - adding_osd
+
+- name: Add Label for the Ceph OSDs
+  delegate_to: "{{ mon1 }}"
+  command: cephadm shell -- ceph orch host label add  {{ item }} osd
+  loop: "{{ ceph_hosts }}"
+  tags:
+    - adding_osd
+
+- name: Apply OSD role with all available devices
+  delegate_to: "{{ mon1 }}"
+  shell: cephadm shell -- ceph orch apply osd --all-available-devices
+  tags:
+    - adding_osd

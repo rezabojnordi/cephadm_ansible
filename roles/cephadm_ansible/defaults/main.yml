@@ -1,0 +1,29 @@
+---
+# defaults file for cephadm_ansible
+docker_enabled: true
+podman_enabled: false
+
+
+## bootstrap
+bootstrap_manager: true
+
+## mon1
+mon1: ""172.16.112.110"
+
+## one interface
+mon_ip: "172.16.112.110"
+
+## cluster network
+public_network: "172.16.112.0/22"
+cluster_network: "172.20.104.0/24"
+
+## adding mon
+mon_hosts:
+  - mon2
+  - mon3
+
+## adding OSD
+ceph_hosts:
+  - ceph1
+  - ceph2
+  - ceph3
